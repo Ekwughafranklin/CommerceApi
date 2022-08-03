@@ -11,12 +11,13 @@ using Core.Interfaces;
 using Core.Specifications;
 using CommerceApi.DTOs;
 using AutoMapper;
+using CommerceApi.Errors;
+using Microsoft.AspNetCore.Http;
 
 namespace CommerceApi.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProductsController : ControllerBase
+
+    public class ProductsController : BaseApiController
     {
         private readonly IGenericRepository<Product> _productsRepo;
         private readonly IGenericRepository<ProductBrand> _productbrandsRepo;
@@ -43,11 +44,13 @@ namespace CommerceApi.Controllers
 
 
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ProductToReturnDto>> GetProduct(int id)
         {
             var spec = new ProductsWithTypesAndBrandsSpecification(id);
             var product = await _productsRepo.GetEntityWithSpec(spec);
-
+            if (product == null) return NotFound(new ApiResponse(404));
             return _mapper.Map<ProductToReturnDto>(product);
         }
 
